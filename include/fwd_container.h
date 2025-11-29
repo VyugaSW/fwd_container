@@ -13,6 +13,11 @@ template<typename T>
 class fwd_container {
 public:
 
+    class iterator_base;
+    class const_iterator_base;
+    class iterator;
+    class const_iterator;
+
     /**
      * @brief Base abstract iterator class for non-const iteration
      */
