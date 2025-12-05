@@ -201,8 +201,13 @@ private:
     class stack_iterator : public fwd_container<T>::iterator_base {
     private:
         Node<T>* current; ///< Current node pointer
+        static constexpr int iterator_kind = 2;
 
     public:
+        int get_iterator_kind() const noexcept override {
+            return iterator_kind;
+        }
+
         /**
          * @brief Constructor
          * @param node Starting node for iteration
@@ -242,7 +247,8 @@ private:
          * @return True if iterators are equal
          */
         bool operator==(const typename fwd_container<T>::iterator_base& other) const override {
-            const stack_iterator* derived = dynamic_cast<const stack_iterator*>(&other);
+            if (this->get_iterator_kind() != other.get_iterator_kind()) return false;
+            const stack_iterator* derived = static_cast<const stack_iterator*>(&other);
             return derived && current == derived->current;
         }
         
@@ -261,7 +267,8 @@ private:
          * @return True if iterators are equal
          */
         bool operator==(const typename fwd_container<T>::const_iterator_base& other) const override {
-            const stack_const_iterator* derived = dynamic_cast<const stack_const_iterator*>(&other);
+            if (this->get_iterator_kind() != other.get_iterator_kind()) return false;
+            const stack_const_iterator* derived = static_cast<const stack_const_iterator*>(&other);
             return derived && current == derived->get_current();
         }
         
@@ -296,7 +303,7 @@ private:
         stack_iterator* clone() const override {
             return new stack_iterator(current);
         }
-        
+
         friend class stack_const_iterator;
     };
 
@@ -306,8 +313,13 @@ private:
     class stack_const_iterator : public fwd_container<T>::const_iterator_base {
     private:
         const Node<T>* current; ///< Current node pointer
+        static constexpr int iterator_kind = 2;
 
     public:
+        int get_iterator_kind() const noexcept override {
+            return iterator_kind;
+        }
+        
         /**
          * @brief Constructor
          * @param node Starting node for iteration
@@ -347,7 +359,8 @@ private:
          * @return True if iterators are equal
          */
         bool operator==(const typename fwd_container<T>::const_iterator_base& other) const override {
-            const stack_const_iterator* derived = dynamic_cast<const stack_const_iterator*>(&other);
+            if (this->get_iterator_kind() != other.get_iterator_kind()) return false;
+            const stack_const_iterator* derived = static_cast<const stack_const_iterator*>(&other);
             return derived && current == derived->current;
         }
         
@@ -366,7 +379,8 @@ private:
          * @return True if iterators are equal
          */
         bool operator==(const typename fwd_container<T>::iterator_base& other) const override {
-            const stack_iterator* derived = dynamic_cast<const stack_iterator*>(&other);
+            if (this->get_iterator_kind() != other.get_iterator_kind()) return false;
+            const stack_iterator* derived = static_cast<const stack_iterator*>(&other);
             return derived && current == derived->get_current();
         }
         

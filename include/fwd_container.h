@@ -23,8 +23,10 @@ public:
      */
     class iterator_base {
     public:
-        virtual ~iterator_base() = default;
+        virtual int get_iterator_kind() const noexcept = 0;
         
+        virtual ~iterator_base() = default;
+
         /**
          * @brief Dereference operator
          * @return Reference to the current element
@@ -83,7 +85,7 @@ public:
          * @return Pointer to new cloned iterator_base
          */
         virtual iterator_base* clone() const = 0;
-        
+
         friend class iterator;
         friend class const_iterator;
     };
@@ -93,8 +95,10 @@ public:
      */
     class const_iterator_base {
     public:
+        virtual int get_iterator_kind() const noexcept = 0;
+
         virtual ~const_iterator_base() = default;
-        
+
         /**
          * @brief Dereference operator
          * @return Const reference to the current element
@@ -147,7 +151,7 @@ public:
          * @return Pointer to new cloned const_iterator_base
          */
         virtual const_iterator_base* clone() const = 0;
-        
+
         friend class iterator;
         friend class const_iterator;
     };
@@ -210,10 +214,8 @@ public:
          * @return Reference to this iterator
          */
         iterator& operator=(const iterator& other) {
-            if (this != &other) {
-                delete ptr;
-                ptr = other.ptr ? other.ptr->clone() : nullptr;
-            }
+            delete ptr;
+            ptr = other.ptr ? other.ptr->clone() : nullptr;
             return *this;
         }
         
@@ -223,11 +225,9 @@ public:
          * @return Reference to this iterator
          */
         iterator& operator=(iterator&& other) noexcept {
-            if (this != &other) {
-                delete ptr;
-                ptr = other.ptr;
-                other.ptr = nullptr;
-            }
+            delete ptr;
+            ptr = other.ptr;
+            other.ptr = nullptr;
             return *this;
         }
         
@@ -237,10 +237,8 @@ public:
          * @return Reference to this iterator
          */
         iterator& operator=(const const_iterator& other) {
-            if (this != &other) {
-                delete ptr;
-                ptr = nullptr;
-            }
+            delete ptr;
+            ptr = nullptr;
             return *this;
         }
         
@@ -285,8 +283,6 @@ public:
          * @return True if iterators are equal
          */
         bool operator==(const iterator& other) const {
-            if (!ptr && !other.ptr) return true;
-            if (!ptr || !other.ptr) return false;
             return *ptr == *other.ptr;
         }
         
@@ -305,8 +301,6 @@ public:
          * @return True if iterators are equal
          */
         bool operator==(const const_iterator& other) const {
-            if (!ptr && !other.ptr) return true;
-            if (!ptr || !other.ptr) return false;
             return *ptr == *other.ptr;
         }
         
@@ -366,10 +360,7 @@ public:
          * @param other Iterator to convert from
          */
         const_iterator(const iterator& other) : ptr(nullptr) {
-            if (other.ptr) {
-                // Use create_const() method for conversion
-                ptr = other.ptr->create_const();
-            }
+            ptr = other.ptr->create_const();
         }
         
         /**
@@ -385,10 +376,8 @@ public:
          * @return Reference to this iterator
          */
         const_iterator& operator=(const const_iterator& other) {
-            if (this != &other) {
-                delete ptr;
-                ptr = other.ptr ? other.ptr->clone() : nullptr;
-            }
+            delete ptr;
+            ptr = other.ptr ? other.ptr->clone() : nullptr;
             return *this;
         }
         
@@ -398,11 +387,9 @@ public:
          * @return Reference to this iterator
          */
         const_iterator& operator=(const_iterator&& other) noexcept {
-            if (this != &other) {
                 delete ptr;
                 ptr = other.ptr;
                 other.ptr = nullptr;
-            }
             return *this;
         }
         
@@ -412,10 +399,8 @@ public:
          * @return Reference to this iterator
          */
         const_iterator& operator=(const iterator& other) {
-            if (this != &other) {
-                delete ptr;
-                ptr = other.ptr ? other.ptr->create_const() : nullptr;
-            }
+            delete ptr;
+            ptr = other.ptr ? other.ptr->create_const() : nullptr;
             return *this;
         }
         
@@ -460,8 +445,6 @@ public:
          * @return True if iterators are equal
          */
         bool operator==(const const_iterator& other) const {
-            if (!ptr && !other.ptr) return true;
-            if (!ptr || !other.ptr) return false;
             return *ptr == *other.ptr;
         }
         
@@ -480,8 +463,6 @@ public:
          * @return True if iterators are equal
          */
         bool operator==(const iterator& other) const {
-            if (!ptr && !other.ptr) return true;
-            if (!ptr || !other.ptr) return false;
             return *ptr == *other.ptr;
         }
         

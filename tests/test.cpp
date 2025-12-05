@@ -260,8 +260,218 @@ TEST(ContainerTest, BaseContainer)
     for (const auto& it : bq) EXPECT_EQ(it, expected_q_after[idx++]);
 
     idx = 0;
-    for (auto& it : bq) EXPECT_EQ(it, expected_q_after[idx++]);
+    for (auto& it : cq) EXPECT_EQ(it, expected_q_after[idx++]);
 
+}
+
+TEST(QueueTest, Queue_Iterator)
+{
+    Queue<int> q;
+    q.push(10);
+    q.push(20);
+    q.push(30);
+
+    Queue<int>::const_iterator cit = q.cbegin(), ocit;
+    EXPECT_EQ(*cit, 10);
+    ocit = ++cit;
+    EXPECT_EQ(*cit, 20);
+    EXPECT_EQ(*ocit, 20);
+    ocit = cit++;
+    EXPECT_EQ(*cit, 30);
+    EXPECT_EQ(*ocit, 20);
+    ++cit;
+    EXPECT_EQ(cit, q.cend());
+
+    const Queue<int>& r = q;
+    cit = r.begin();
+    EXPECT_EQ(*cit, 10);
+    ++cit;
+    EXPECT_EQ(*cit, 20);
+    cit++;
+    EXPECT_EQ(*cit, 30);
+    ++cit;
+    EXPECT_EQ(cit, r.end());
+
+    Queue<int>::iterator it = q.begin(), oit;
+    EXPECT_EQ(*it, 10);
+    oit = ++it;
+    EXPECT_EQ(*it, 20);
+    EXPECT_EQ(*oit, 20);
+    oit = it++;
+    EXPECT_EQ(*it, 30);
+    EXPECT_EQ(*oit, 20);
+    *oit = 5;
+    EXPECT_EQ(*it, 30);
+    EXPECT_EQ(*oit, 5);
+    ++it;
+    EXPECT_EQ(it, q.end());
+
+    std::stringstream sout;
+    sout << q;
+    EXPECT_EQ(sout.str(), "10 5 30");
+}
+
+TEST(QueueTest, Queue_For)
+{
+    Queue<int> q;
+    q.push(1);
+    q.push(2);
+    q.push(3);
+    
+    const Queue<int>& r = q;
+    int expected1[] = {1, 2, 3};
+    int idx = 0;
+    for (auto& v : r) EXPECT_EQ(v, expected1[idx++]);
+
+    int expected2[] = {2, 4, 6};
+    idx = 0;
+    for (auto& v : q) v *= 2; // Queue before: (1, 2, 3); Queue after: (2, 4, 6)
+
+    idx = 0;
+    for (const auto& v : q) EXPECT_EQ(v, expected2[idx++]);
+
+    int expected3[] = {3, 5, 7};
+
+    for (Queue<int>::iterator it = q.begin(); it != q.end(); ++it) {
+        *it += 1;
+    } //Queue before: (2, 4, 6); Queue after: (3, 5, 7);
+
+    idx = 0;
+    for (Queue<int>::const_iterator it = q.begin(); it != q.end(); ++it)
+        EXPECT_EQ(*it, expected3[idx++]);
+    idx = 0;
+    for (Queue<int>::const_iterator it = r.begin(); it != r.end(); ++it)
+        EXPECT_EQ(*it, expected3[idx++]);
+    idx = 0;
+    for (Queue<int>::const_iterator it = q.cbegin(); it != q.cend(); ++it)
+        EXPECT_EQ(*it, expected3[idx++]);
+}
+
+TEST(QueueTest, Queue_PushPopCopy)
+{
+    Queue<int> q;
+    q.push(1);
+    q.push(2);
+    q.push(3);
+
+    q.pop();
+    q.push(10);
+    q.push(20);
+
+    Queue<int> copy_q(q);
+
+    int expected_orig[] = {2, 3, 10, 20};
+    int idx = 0;
+    for (auto v : copy_q) EXPECT_EQ(v, expected_orig[idx++]);
+
+    copy_q.pop();
+    copy_q.pop();
+    copy_q.push(99);
+    copy_q.push(98);
+    copy_q.push(97);
+
+    idx = 0;
+    for (auto v : q) EXPECT_EQ(v, expected_orig[idx++]);
+
+    int expected_copy[] = {10, 20, 99, 98, 97};
+    idx = 0;
+    for (auto v : copy_q) EXPECT_EQ(v, expected_copy[idx++]);
+
+    Queue<int> moved_q(std::move(copy_q));
+
+    int expected_moved[] = {10, 20, 99, 98, 97};
+    idx = 0;
+    for (auto v : moved_q) EXPECT_EQ(v, expected_moved[idx++]);
+
+    EXPECT_TRUE(copy_q.empty());
+
+    Queue<int> q2;
+    q2 = q;
+    idx = 0;
+    for (auto v : q2) EXPECT_EQ(v, expected_orig[idx++]);
+
+    q2.pop();
+    q2.push(42);
+    q2.push(99);
+
+    idx = 0;
+    for (auto v : q) EXPECT_EQ(v, expected_orig[idx++]);
+
+    int expected_copy_asgn[] = {3, 10, 20, 42, 99};
+    idx = 0;
+    for (auto v : q2) EXPECT_EQ(v, expected_copy_asgn[idx++]);
+
+    Queue<int> q3;
+    q3 = std::move(q2);
+    idx = 0;
+    for (auto v : q3) EXPECT_EQ(v, expected_copy_asgn[idx++]);
+
+    EXPECT_TRUE(q2.empty());
+
+    q3.pop();
+    q3.push(77);
+    int expected_final[] = {10, 20, 42, 99, 77};
+    idx = 0;
+    for (auto v : q3) EXPECT_EQ(v, expected_final[idx++]);
+}
+
+TEST(QueueTest, Queue_IO)
+{
+    Queue<int> q;
+    q.push(0);
+
+    std::stringstream sin("1 2 3 4 5");
+    sin >> q;
+
+    EXPECT_EQ(q.size(), 6u);
+
+    int expected[] = {0, 1, 2, 3, 4, 5};
+    int idx = 0;
+    for (auto v : q) EXPECT_EQ(v, expected[idx++]);
+
+    std::stringstream sout;
+    sout << q;
+
+    std::string expected_str = "0 1 2 3 4 5";
+    EXPECT_EQ(sout.str(), expected_str);
+
+    for (auto& v : q) v += 10;
+
+    std::stringstream sout2;
+    sout2 << q;
+    std::string expected_str2 = "10 11 12 13 14 15";
+    EXPECT_EQ(sout2.str(), expected_str2);
+}
+
+TEST(QueueTest, Queue_Algs)
+{
+    Queue<int> q;
+
+    for (int i = 1; i <= 5; ++i) q.push(i);
+
+    auto it = std::find_if(q.begin(), q.end(), [](int v){ return v % 2 == 0; });
+    EXPECT_EQ(*it, 2);
+    *it = 3;
+
+    const Queue<int>& r = q;
+    auto cit = std::find_if(r.begin(), r.end(), [](int v){ return v % 2 == 0; });
+    EXPECT_EQ(*cit, 4);
+
+    it = std::find_if(q.begin(), q.end(), [](int v){ return v == 0; });
+    EXPECT_EQ(it, q.end());
+
+    auto count_even = std::count_if(q.begin(), q.end(), [](int v){ return v % 2 == 0; });
+    EXPECT_EQ(count_even, 1);
+
+    std::replace_if(q.begin(), q.end(), [](int v){ return v % 2 != 0; }, 99);
+    int expected_replace[] = {99, 99, 99, 4, 99};
+    int idx = 0;
+    for (auto v : q) EXPECT_EQ(v, expected_replace[idx++]);
+
+    std::for_each(q.begin(), q.end(), [](int& v){ v += 1; });
+    int expected_for_each[] = {100, 100, 100, 5, 100};
+    idx = 0;
+    for (auto v : q) EXPECT_EQ(v, expected_for_each[idx++]);
 }
 
 
